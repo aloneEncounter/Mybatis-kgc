@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.miao.dao.UserMapper">
+
+    <!--查询用户表的记录数-->
+    <select id="count" resultType="int">
+
+        select count(1) as count from smbms_user
+
+    </select>
+
+    <!--查询用户列表-->
+    <!--<select id="getUserList" resultType="cn.miao.pojo.User">-->
+    <select id="getUserList1" resultMap="userList">
+
+        select u.*,r.roleName from smbms_user u ,smbms_role r
+        where u.userRole=r.id
+
+        <if test="userRole !=null">
+            and userRole=#{userRole}
+        </if>
+        <if test="userName!=null and userName!=''">
+            and userName like concat('%',#{userName},'%')
+        </if>
+    </select>
+
+    <!--动态SQL  where  自动跳过 and   trim-->
+    <select id="getUserList2" resultType="user">
+        select u.* from smbms_user u
+
+        <!--<where>
+            <if test="userName!=null and userName!=''">
+                and userName like concat('%',#{userName},'%')
+            </if>
+
+            <if test="userRole !=null">
+                and userRole=#{userRole}
+            </if>
+        </where>-->
+        /*当if判断成立后 会将以前缀为and/or的内容 用where 替换and/or*/
+        <trim prefix="where" prefixOverrides="and | or">
+            <if test="userName!=null and userName!=''">
+                and userName like concat('%',#{userName},'%')
+            </if>
+
+            <if test="userRole !=null">
+                and userRole=#{userRole}
+            </if>
+        </trim>
+
+    </select>
+
+    <!--根据，角色名、用户名 进行分页查找-->
+    <select id="getUserList3" resultMap="userList">
+        select u.* from smbms_user u,smbms_role r
+            where u.userRole=r.id
+            <if test="userName!=null and userName!=''">
+                and userName like concat('%',#{userName},'%')
+            </if>
+
+            <if test="userRole !=null">
+                and userRole=#{userRole}
+            </if>
+            order by creationDate desc limit #{from},#{pageSize}
+    </select>
+
+    <!--自定义映射结果-->
+    <select id="getUserList" resultType="user" parameterType="User">
+
+        select u.*,r.roleName as userRoleName from smbms_user u ,smbms_role r
+          where userName like concat('%',#{userName},'%')
+             and userRole=#{userRole} and u.userRole=r.id
+
+    </select>
+    <!--<select id="getUserList1" resultMap="userList"  parameterType="User">-->
+    <resultMap id="userList" type="User">
+        <result property="id" column="id"/>
+        <result property="userCode" column="userCode"/>
+        <result property="userName" column="userName"/>
+        <result property="phone" column="phone"/>
+        <result property="birthday" column="birthday"/>
+        <result property="userRole" column="userRole"/>
+        <result property="userRoleName" column="roleName"/>
+        <result property="address" column="address"/>
+    </resultMap>
+
+    <select id="getUserListByMap" resultType="user" parameterType="Map">
+
+        select * from smbms_user where userName like concat('%',#{uName},'%')
+        and userRole=#{uRole}
+    </select>
+
+    <!--根据用户名称查询用户列表-->
+    <select id="getUserListByUserName" parameterType="String" resultType="user">
+
+        select * from smbms_user where userName like  concat('%',#{userName},'%')
+
+    </select>
+
+    <insert id="add" parameterType="user">
+        insert into smbms_user (userCode,userName,userPassword,gender,birthday,phone,address,userRole,createdBy,creationDate)
+        values (#{userCode},#{userName},#{userPassword},
+              #{gender},#{birthday},#{phone},#{address},#{userRole},#{createBy},#{creationDate})
+    </insert>
+
+    <!--更新数据表时，若某个参数为null，会导致更新错误-->
+    <update id="modify" parameterType="user">
+
+        update smbms_user
+--         使用set会自动忽略 SQL语句中自带的逗号
+        <!--<set>-->
+            <!--<if test="userCode !=null">userCode=#{userCode},</if>-->
+            <!--<if test="userName !=null">userName=#{userName},</if>-->
+            <!--<if test="userPassword !=null">userPassword=#{userPassword},</if>-->
+            <!--<if test="gender !=null">gender=#{gender},</if>-->
+            <!--<if test="birthday !=null">birthday=#{birthday},</if>-->
+            <!--<if test="address !=null">address=#{address},</if>-->
+            <!--<if test="modifyBy !=null">modifyBy=#{modifyBy},</if>-->
+            <!--<if test="modifyDate !=null">modifyDate=#{modifyDate},</if>-->
+
+        <!--</set>-->
+        <!--where id=#{id}-->
+--        使用trim 忽略SQL 的逗号
+        <trim prefix="set" suffixOverrides="," suffix="where id=#{id}">
+            <if test="userCode !=null">userCode=#{userCode},</if>
+            <if test="userName !=null">userName=#{userName},</if>
+            <if test="userPassword !=null">userPassword=#{userPassword},</if>
+            <if test="gender !=null">gender=#{gender},</if>
+            <if test="birthday !=null">birthday=#{birthday},</if>
+            <if test="address !=null">address=#{address},</if>
+            <if test="modifyBy !=null">modifyBy=#{modifyBy},</if>
+            <if test="modifyDate !=null">modifyDate=#{modifyDate},</if>
+        </trim>
+
+
+    </update>
+
+    <update id="updatePwd">
+        update smbms_user set userPassword=#{userPassword}
+        where id=#{id}
+    </update>
+
+    <delete id="deleteUserById">
+        delete from smbms_user where id=#{id}
+    </delete>
+
+
+    <resultMap id="userRoleResult" type="User">
+
+        <id property="id" column="id"/>
+        <result property="userCode" column="userCode"/>
+        <result property="userName" column="userName"/>
+        <result property="userRole" column="userRole"/>
+
+        <association property="role" javaType="Role">
+            <id property="id" column="r_id"/>
+            <result property="roleCode" column="roleCode"/>
+            <result property="roleName" column="roleName"/>
+        </association>
+
+
+    </resultMap>
+
+    <select id="getUserListByRoleId" parameterType="Integer" resultMap="userRoleResult">
+
+        select u.*,r.id as r_id,r.roleCode,r.roleName from smbms_user u ,smbms_role r
+        where u.userRole=#{userRole} and u.userRole=r.id
+    </select>
+
+
+    <!--使用resultMap实现代码复用-->
+    <resultMap id="addressResult" type="Address">
+        <id property="id" column="a_id"/>
+        <result property="contact" column="contact"/>
+        <result property="addressDesc" column="addressDesc"/>
+        <result property="postCode" column="postCode"/>
+        <result property="tel" column="tel"/>
+    </resultMap>
+    <!--使用collection-->
+    <resultMap id="userAddressResult" type="User">
+        <id column="id" property="id"/>
+        <result property="userCode" column="userCode"/>
+        <result property="userName" column="userName"/>
+        <!--property：映射类实体对象的属性，oftype：集合所包含的类型-->
+        <collection property="addressList" ofType="Address" resultMap="addressResult"/>
+
+    </resultMap>
+
+    <select id="getAddressListByUserId" resultMap="userAddressResult" parameterType="Integer">
+
+        select u.*,a.id as a_id ,a.contact,a.addressDesc,a.tel,a.postCode,a.userId
+        from smbms_user u ,smbms_address a
+        where u.id=a.userId and u.id=#{id}
+    </select>
+
+
+    <resultMap id="userMapByRole" type="user">
+        <id property="id" column="id"/>
+        <result property="userCode" column="userCode"/>
+        <result property="userName" column="userName"/>
+    </resultMap>
+    <select id="getUserByRoleId_foreach_array" resultMap="userMapByRole">
+        select *  from smbms_user where userRole in
+          <foreach collection="array" item="roleIds" open="(" separator="," close=")">
+              #{roleIds}
+          </foreach>
+    </select>
+
+
+    <!--传入参数为 list时-->
+    <select id="getUserByRoleId_foreach_list" resultMap="userMapByRole">
+        select *  from smbms_user where userRole in
+        <foreach collection="list" item="roleList" open="(" separator="," close=")">
+            #{roleList}
+        </foreach>
+    </select>
+
+    <!--当传入的参数为map时，在SQL语句中 会根据相应的key ，获取value值
+       collection 的值会以map中的 key值，作为集合  item 每个元素迭代 时的别名-->
+    <select id="getUserByconditionMap_foreach_map" resultMap="userMapByRole">
+        select *from smbms_user where gender=#{gender} and userRole in
+
+        <foreach collection="roleIds" item="roleMap" open="(" separator="," close=")">
+            #{roleMap}
+        </foreach>
+    </select>
+
+    <select id="getUserByRoleId_foreach_map" resultMap="userMapByRole">
+           select *  from smbms_user where userRole in
+           <foreach collection="roleKey" item="roleMap" open="(" separator="," close=")">
+               #{roleMap}
+           </foreach>
+    </select>
+
+    <select id="getUserList_choose" resultType="user">
+        select *from smbms_user where 1=1
+          <choose>
+              <when test="userName !=null and userName!=''">
+                  and userName like concat('%',#{userName},'%')
+              </when>
+              <when test="userCode !=null and userCode!=''">
+                  and userCode like concat('%',#{userCode},'%')
+              </when>
+              <when test="userRole !=null">
+                  and userRole =#{userRole}
+              </when>
+
+              <otherwise>
+                  and YEAR(creationDate)=YEAR(#{creationDate})
+              </otherwise>
+          </choose>
+    </select>
+</mapper>

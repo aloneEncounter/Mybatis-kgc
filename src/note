@@ -1,0 +1,4 @@
+使用了collection association后 受用Full 会自动映射 复杂的结果集合
+
+        <!--自动映射级别-->
+        <!--<setting name="autoMappingBehavior" value="NONE"/>-->

@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="mybatis-3.5.0">
+    <CLASSES>
+      <root url="jar://E:/谷歌/mybatis/mybatis-3.5.0/mybatis-3.5.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://E:/谷歌/mybatis/mybatis-3-mybatis-3.2.2.zip!/mybatis-3-mybatis-3.2.2/src/main/java" />
+      <root url="jar://E:/谷歌/mybatis/mybatis-3-mybatis-3.2.2.zip!/mybatis-3-mybatis-3.2.2/src/test/java" />
+    </SOURCES>
+  </library>
+</component>
